@@ -1,104 +1,92 @@
+# -*- coding: utf-8 -*-
 class Simplex:
 
     def __init__(self):
-        self.tabela = []
+        self.tabela = []                                            # Declaração da variavel tabela
     
     def set_funcao_objetiva(self, fo):
-        self.tabela.append(fo)
+        self.tabela.append(fo)                                      # Adiciona a linha da função objetivo na tabela
 
     def add_resticoes(self, sa):   
-        self.tabela.append(sa)
+        self.tabela.append(sa)                                      # Adiciona a linha da restrição na tabela
     
     def get_coluna_entrando(self):
-        coluna_pivo = min(self.tabela[0]) #Retorna o menor valor da linha da função objetiva
-        index = self.tabela[0].index(coluna_pivo) # indice do menor valor
-        return index
+        coluna_pivo = min(self.tabela[0])                           # Retorna o menor valor da linha da função objetiva
+        index = self.tabela[0].index(coluna_pivo)                   # Indice do menor valor
+        return index                                                # Retorna o indice
 
     def get_linha_sai(self, coluna_entrando):
-        resultado = {}
-        for linha in range(len(self.tabela)):
-            if linha > 0:
-                if self.tabela[linha][coluna_entrando] > 0:
+        resultado = {}                                              # Cria um dicionario vazio
+        for linha in range(len(self.tabela)):                       # Percorre cada linha da tabela
+            if linha > 0:                                           # Se o indice linha for maior que 0, ou seja, não ser a linha da função objeivo
+                if self.tabela[linha][coluna_entrando] > 0:         # Se o valor dessa posição for maior que 0
                     divisao = self.tabela[linha][-1] / self.tabela[linha][coluna_entrando] #divide o ultimo elemento da linha pelo elemento pivô
                     resultado[linha] = divisao
-        index = min(resultado, key=resultado.get)#Pega a linha com menor valor na divisao 
-        return index
+        index = min(resultado, key=resultado.get)                   # Pega o indice da linha com menor valor na divisao 
+        return index                                                # Retorna o indice
 
     def calcular_nova_linha_pivo(self, coluna_entrando, linha_saindo):
-        linha = self.tabela[linha_saindo]
-        pivo = linha[coluna_entrando]
-        nova_linha_pivo = [valor / pivo for valor in linha]
-        return nova_linha_pivo
+        linha = self.tabela[linha_saindo]                           # Linha que sai da tabela
+        pivo = linha[coluna_entrando]                               # Linha pivô
+        nova_linha_pivo = [valor / pivo for valor in linha]         # Para cada valor na linha, divide pelo valor na linha pivô e salva na nova linha pivô
+        return nova_linha_pivo                                      # Retorna a nova linha pivô
 
     def calcular_nova_linha(self, linha, coluna_entrando, linha_pivo):
-        pivo = linha[coluna_entrando] * -1
-        linha_resultante = [valor * pivo for valor in linha_pivo]
+        pivo = linha[coluna_entrando] * -1                          # Inverte o sinal do valor pivô da nova linha
+        linha_resultante = [valor * pivo for valor in linha_pivo]   # Multiplica cada elemento na linha pelo pivô
 
-        nova_linha = []
-        for i in range(len(linha_resultante)):
-            soma = linha_resultante[i] + linha[i]
-            nova_linha.append(soma)
-        return nova_linha
+        nova_linha = []                                             # Cria uma nova linha vazia
+        for i in range(len(linha_resultante)):                      # Para cada valor da linha resultante
+            soma = linha_resultante[i] + linha[i]                   # Soma com o valor na linha anterior (Ex:l0=l0anterior-(X)*pivô)
+            nova_linha.append(soma)                                 # Adiciona essa soma a nova linha
+        return nova_linha                                           # Retorna a nova linha
 
-    def is_negativo(self):
-        negativo = list(filter(lambda x: x < 0, self.tabela[0]))
+    def is_negativo(self):                                          # Método para verificar se ha valor negativo
+        negativo = list(filter(lambda x: x < 0, self.tabela[0]))    
         return True if len(negativo) > 0 else False
 
     def calcular(self):
-        coluna_entrando = self.get_coluna_entrando()
-        primeira_linha_sai = self.get_linha_sai(coluna_entrando)
+        coluna_entrando = self.get_coluna_entrando()                # Chama o método para calcular a coluna que entra
+        primeira_linha_sai = self.get_linha_sai(coluna_entrando)    # Chama o método para calcular a linha que sai
 
-        linha_pivo = self.calcular_nova_linha_pivo(coluna_entrando, primeira_linha_sai)
-        self.tabela[primeira_linha_sai] = linha_pivo
-        copia_tabela = self.tabela.copy() 
+        linha_pivo = self.calcular_nova_linha_pivo(coluna_entrando, primeira_linha_sai) # Chama o método para calcular a linha pivô
+        self.tabela[primeira_linha_sai] = linha_pivo                # Adiciona a linha pivô na tabela
+        copia_tabela = self.tabela.copy()                           # Cria uma copia da tabela
 
         index = 0
-        while index < len(self.tabela):
-            if index != primeira_linha_sai:
-                linha = copia_tabela[index]
-                nova_linha = self.calcular_nova_linha(linha,coluna_entrando, linha_pivo)
-                self.tabela[index] = nova_linha
+        while index < len(self.tabela):                             # Laço para percorrer toda a tabela
+            if index != primeira_linha_sai:                         # Se a linha não for a pivô
+                linha = copia_tabela[index]                         # Linha recebe linha pivô
+                nova_linha = self.calcular_nova_linha(linha,coluna_entrando, linha_pivo) # Calcula nova linha
+                self.tabela[index] = nova_linha                     # Adiciona a nova linha na tabela
             index += 1
 
-    def imprimir_tabela(self):
+    def imprimir_tabela(self):                                      # Método para mostrar a tabela no console de execução
         print()
         for i in range(len(self.tabela)):
             for j in range(len(self.tabela[0])):
-                print(f"{self.tabela[i][j]}\t", end="")
+                print(f"{self.tabela[i][j]:.2f}\t", end="")
             print()
 
-    def resolver(self):
-        self.calcular()
-        while self.is_negativo():
-            self.imprimir_tabela()
-            self.calcular()
+    def resolver(self):                                             # Método que resolve o simplex
+        self.calcular()                                             # Faz o primeiro cálculo
+        while self.is_negativo():                                   # Se existir elementos negativos na linha 
+            print('--------------------------------------------')
+            self.imprimir_tabela()                                  # Chama o método que mostra a tabela
+            print('--------------------------------------------')
+            self.calcular()                                         # Calcula novamente              
 
-        self.imprimir_tabela()
+        self.imprimir_tabela()                                      # Chama o método que mostra a tabela                            
+        print('--------------------------------------------')
 
 def main():
-    """ Um sapateiro faz 6 sapatos por hora, se fizer somente sapatos, e 5 cintos por hora, se fizer somente
-        cintos. Ele gasta 2 unidades de couro para fabricar 1 unidade de sapato e 1 unidade de couro para fabricar
-        uma unidade de cinto. Sabendo-se que o total disponível de couro é de 6 unidades e que o lucro unitário
-        por sapato é de $5.00 e o do cinto é de $2.00, pede-se: o modelo do sistema de produção do sapateiro, se
-        o objetivo é maximizar seu lucro por hora. """
-    """ Max Z = 5x1 + 2x2
-        Sujeito a:
-            2x1 + x2 <= 6
-            10x1 + 12x2 <= 60
-            x1, x2 >= 0 
-        
-        Forma padrão
-        Max Z - 5x1 - 2x2 + 0x3 + 0x4 = 0
-        Sujeito a:
-            2x1 + x2 + x3 = 6
-            10x1 + 12x2 + x4 = 60
-            x1, x2, x3, x4 >= 0
-            """
-    simplex = Simplex()
-    simplex.set_funcao_objetiva([1,-5,-2,0,0,0])
-    simplex.add_resticoes([0,2,1,1,0,6])
-    simplex.add_resticoes([0,10,12,0,1,60])
-    simplex.resolver()
+   
+    simplex = Simplex()                                             # Instancia um objeto da classe Simplex
+    simplex.set_funcao_objetiva([1,-90,-120,0,0,0,0])               # Adiciona a linha da função objetivo
+    simplex.add_resticoes([0,1,0,1,0,0,5000])                       # Adiciona a linha da restrição
+    simplex.add_resticoes([0,0,1,0,1,0,7000])                       # Adiciona a linha da restrição
+    simplex.add_resticoes([0,50,100,0,0,1,800000])                  # Adiciona a linha da restrição
+    simplex.resolver()                                              # Chama o método para resolver o problema
 
 if __name__ == '__main__':
     main()
